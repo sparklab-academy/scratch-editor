@@ -37,6 +37,11 @@ jobs:
           npm run build --workspace=packages/scratch-vm
 
       - name: Build scratch-gui standalone bundle
+        env:
+          # Pins asset URLs (including the Worker-loaded fetch-worker chunk, which can't
+          # use 'auto' — see fix-worker-public-path.js) to this exact GitHub Pages URL,
+          # since we always deploy dist/ here.
+          SPARKLAB_PUBLIC_PATH: https://sparklab-academy.github.io/scratch-editor/
         run: npm run build:dist-standalone --workspace=packages/scratch-gui
 
       - name: Prepare Pages artifact

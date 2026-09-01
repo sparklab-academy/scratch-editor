@@ -160,8 +160,14 @@ const distStandaloneConfig = baseConfig.clone()
             // breaks asset loading (block icons, fonts, extension worker chunks) for any
             // consumer that doesn't serve dist/ from their own domain root — e.g. loading
             // this bundle from a CDN into an unrelated host page. 'auto' resolves asset
-            // URLs against the actual <script> tag's src at runtime instead.
-            publicPath: 'auto',
+            // URLs against the actual <script> tag's src at runtime — EXCEPT for Worker
+            // chunk loading (e.g. scratch-storage's fetch-worker), which webpack gives
+            // its own nested runtime that can't use 'auto' (no `document.currentScript`
+            // inside a Worker's global scope), so it silently falls back to hardcoded "/".
+            // SPARKLAB_PUBLIC_PATH lets our own CI pin the known absolute CDN URL instead,
+            // which works correctly in both contexts; unset, this still defaults to 'auto'
+            // for anyone else building this fork generically.
+            publicPath: process.env.SPARKLAB_PUBLIC_PATH || 'auto',
             path: path.resolve(__dirname, 'dist')
         }
     });
