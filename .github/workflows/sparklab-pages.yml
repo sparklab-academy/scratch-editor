@@ -1,0 +1,59 @@
+name: Spark Lab - Publish standalone bundle to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build workspace packages (dependency order)
+        run: |
+          npm run build --workspace=packages/task-herder
+          npm run build --workspace=packages/scratch-storage
+          npm run build --workspace=packages/scratch-svg-renderer
+          npm run build --workspace=packages/scratch-render
+          npm run build --workspace=packages/scratch-paint
+          npm run build --workspace=packages/scratch-vm
+
+      - name: Build scratch-gui standalone bundle
+        run: npm run build:dist-standalone --workspace=packages/scratch-gui
+
+      - name: Prepare Pages artifact
+        run: |
+          mkdir -p pages-out
+          cp -r packages/scratch-gui/dist/* pages-out/
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: pages-out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
