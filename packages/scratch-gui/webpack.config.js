@@ -156,6 +156,12 @@ const distStandaloneConfig = baseConfig.clone()
             'scratch-gui-standalone': path.join(__dirname, 'src/index-standalone.tsx')
         },
         output: {
+            // Same reasoning as distConfig below: a static publicPath (defaults to `/`)
+            // breaks asset loading (block icons, fonts, extension worker chunks) for any
+            // consumer that doesn't serve dist/ from their own domain root — e.g. loading
+            // this bundle from a CDN into an unrelated host page. 'auto' resolves asset
+            // URLs against the actual <script> tag's src at runtime instead.
+            publicPath: 'auto',
             path: path.resolve(__dirname, 'dist')
         }
     });
